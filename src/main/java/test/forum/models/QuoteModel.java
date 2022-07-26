@@ -18,7 +18,7 @@ public class QuoteModel {
     @NotBlank
     @NotNull
     private String text;
-    private int votesCount;
+    private Integer votesCount;
     private LocalDateTime creationDate;
 
 }

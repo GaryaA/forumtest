@@ -2,16 +2,20 @@ package test.forum;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import test.forum.entity.QuoteEntity;
 import test.forum.entity.UserEntity;
 import test.forum.models.QuoteModel;
 import test.forum.repo.QuoteRepo;
 
+import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -38,12 +42,21 @@ public class QuoteResource {
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable UUID id) {
-        quoteRepo.deleteById(id);
+        try {
+            quoteRepo.deleteById(id);
+        } catch (EmptyResultDataAccessException ignored) {
+        }
     }
 
     @GetMapping("/{id}")
     public QuoteModel getById(@PathVariable UUID id) {
-        return convertToQuoteModel(quoteRepo.getById(id));
+        try {
+            QuoteEntity quoteEntity = quoteRepo.getById(id);
+            quoteEntity.getText();
+            return convertToQuoteModel(quoteEntity);
+        } catch (EntityNotFoundException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "entity not found");
+        }
     }
 
     @GetMapping("/toplist")
@@ -67,6 +80,9 @@ public class QuoteResource {
     //todo
     private static QuoteModel convertToQuoteModel(QuoteEntity quoteEntity) {
         QuoteModel quoteModel = new QuoteModel();
+        if (quoteEntity == null) {
+            return quoteModel;
+        }
         BeanUtils.copyProperties(quoteEntity, quoteModel);
         quoteModel.setUserId(quoteEntity.getUser().getId());
         return quoteModel;

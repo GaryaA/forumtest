@@ -30,7 +30,7 @@ public class QuoteEntity {
     private LocalDateTime creationDate;
 
     @Formula("(select sum(case when v.vote_like = 1 then 1 else -1 end) from votes v where v.quote_id = id)")
-    private int votesCount;
+    private Integer votesCount;
 
     @PrePersist
     public void setDefaultValues() {
